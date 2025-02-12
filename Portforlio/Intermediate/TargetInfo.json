@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "Portforlio",
+			"Path": "..\\Source\\Portforlio.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "PortforlioEditor",
+			"Path": "..\\Source\\PortforlioEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}
