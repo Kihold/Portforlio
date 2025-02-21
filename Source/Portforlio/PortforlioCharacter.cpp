@@ -52,16 +52,45 @@ APortforlioCharacter::APortforlioCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	//어빌리티 시스템 컴포넌트 생성해서 추가
+	AbilitySystemComponent = CreateDefaultSubobject<UMyAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+
+	//온라인 사용 여부 true가 온라인
+	AbilitySystemComponent->SetIsReplicated(true);
+
+	//능력치 변경시 이벤트 호출 여부
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 }
 
 void APortforlioCharacter::BeginPlay()
 {
 	// Call the base class  
-	Super::BeginPlay();
+	Super::BeginPlay(); //부모 한번
+
+	//생성자에서 생성 했음
+	if (IsValid(AbilitySystemComponent))
+	{
+		//데이터 에셋을 에디터에 넣은걸 여기서 UMyAttributeSet 타입으로
+		AttributeSetVar = AbilitySystemComponent->GetSet<UMyAttributeSet>();
+		if (AttributeSetVar != nullptr)
+		{
+
+		}
+		else
+		{
+		//	UE_LOG(LogTemp, Error, TEXT("%s()Missing AbilitySystemComponent."), *FString(__FUNCTION__));//호출한 함수 이름으로 에러 메세지 출력
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Input
+
+void APortforlioCharacter::NotifyControllerChanged()
+{
+	Super::NotifyControllerChanged();
+}
 
 void APortforlioCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -89,8 +118,13 @@ void APortforlioCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	}
 	else
 	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	//	UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+}
+
+UMyAbilitySystemComponent* APortforlioCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 void APortforlioCharacter::Move(const FInputActionValue& Value)

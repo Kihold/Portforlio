@@ -5,8 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "MyAbilitySystemComponent.h"//어빌리티 시스템
+#include "MyAttributeSet.h"//어트뷰트
 #include "PortforlioCharacter.generated.h"
 
+class UMyAbilitySystemComponent;//클래스 전방 선언
+class UMyAttributeSet;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -47,6 +51,23 @@ class APortforlioCharacter : public ACharacter
 public:
 	APortforlioCharacter();
 	
+public://내꺼 선언
+	//어빌리티 시스템 컴포넌트 추가
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GASGamePlayAbility")
+	class UMyAbilitySystemComponent* AbilitySystemComponent;
+	//Get함수
+	virtual class UMyAbilitySystemComponent* GetAbilitySystemComponent() const;
+	
+	//캐릭터 관련 정보(HP, MP, Damage등 보관)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GASGamePlayAbility")
+	const class UAttributeSet* AttributeSetVar;
+
+	//EditDefaultOnly 에디터에서 초기에 캐릭터의 스킬 추가
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GASGamePlayAbility")
+	TArray<TSubclassOf<class UGameplayAbility>> InitialAbilities;
+
+	//스킬 관련 게임 어빌리티, 초기 능력치 세팅
+	TArray<TSubclassOf<class UGameplayEffect>> DefaultAttributes;
 
 protected:
 
@@ -58,11 +79,14 @@ protected:
 			
 
 protected:
+	// To add mapping context
+	virtual void BeginPlay();
+
+	virtual void NotifyControllerChanged() override;
+
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
-	// To add mapping context
-	virtual void BeginPlay();
 
 public:
 	/** Returns CameraBoom subobject **/
