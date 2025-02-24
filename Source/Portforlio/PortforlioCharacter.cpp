@@ -75,7 +75,8 @@ void APortforlioCharacter::BeginPlay()
 		AttributeSetVar = AbilitySystemComponent->GetSet<UMyAttributeSet>();
 		if (AttributeSetVar != nullptr)
 		{
-
+			//델리게이트로 HP 변경시 원하는 함수 호출 가능하도록
+			const_cast<UMyAttributeSet*>(AttributeSetVar)->HealthChangeDelegate.AddDynamic(this, &APortforlioCharacter::OnHealthChangeNative);
 		}
 		else
 		{
@@ -125,6 +126,101 @@ void APortforlioCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 UMyAbilitySystemComponent* APortforlioCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void APortforlioCharacter::InitalizeAbility(TSubclassOf<class UGameplayAbility> AbilityToGet, int32 AbilityLevel)
+{
+	//온라인 상태에서 서버일때만 어빌리티 추가
+	//서버 아니면 하나마나 의미 없음
+	if (HasAuthority())
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityToGet, AbilityLevel));
+	}
+}
+
+void APortforlioCharacter::InitalizeAbilityMulti(TArray<TSubclassOf<class UGameplayAbility>> AbilityToAcquire, int32 AbilityLevel)
+{
+	if (HasAuthority())
+		//돌면서 다 추가
+		for (TSubclassOf<class UGameplayAbility> AbilityItem : AbilityToAcquire)
+		{
+			InitalizeAbility(AbilityItem, AbilityLevel);
+		}
+}
+
+void APortforlioCharacter::RemoveAbilityWithTags(FGameplayTagContainer TagContainer)
+{
+	//여러개 삭제
+	TArray<struct FGameplayAbilitySpec*> MatchingAbilities;
+
+	//현재 가지고 있는 태그를 비교해서 매개변수로 넣어준 컨테이너와 일치하는게 있으면 가져옴
+	AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(TagContainer, MatchingAbilities, true);
+
+	//돌아가면서 삭제
+	for (FGameplayAbilitySpec* spec : MatchingAbilities)
+	{
+		AbilitySystemComponent->ClearAbility(spec->Handle);
+	}
+}
+
+void APortforlioCharacter::CancelAbilityWithTags(FGameplayTagContainer WIthTag, FGameplayTagContainer WithoutTag)
+{
+	AbilitySystemComponent->CancelAbilities(&WIthTag, &WithoutTag);
+}
+
+void APortforlioCharacter::AddLooseGamePlayTag(FGameplayTag TagToAdd)
+{
+	AbilitySystemComponent->AddLooseGameplayTag(TagToAdd);
+	AbilitySystemComponent->SetTagMapCount(TagToAdd, 1);
+}
+
+void APortforlioCharacter::RemoveLooseGameplayTag(FGameplayTag TagToRemove)
+{
+	AbilitySystemComponent->RemoveLooseGameplayTag(TagToRemove);
+}
+
+void APortforlioCharacter::ChangeAbilityLevelWithTags(FGameplayTagContainer TagContainer, int32 Level)
+{
+	//여러개 삭제
+	TArray<struct FGameplayAbilitySpec*> MatchingAbilities;
+
+	//현재 가지고 있는 태그를 비교해서 매개변수로 넣어준 컨테이너와 일치하는게 있으면 가져옴
+	AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(TagContainer, MatchingAbilities, true);
+
+	//돌아가면서 안에있는 레벨 변경
+	for (FGameplayAbilitySpec* spec : MatchingAbilities)
+	{
+		spec->Level = Level;
+	}
+}
+
+void APortforlioCharacter::OnHealthChagneNative(float Health, int32 StackCount)
+{
+	//BluePrintImplementEvnet함수라 여기서 부르면 블루프린트에서 불러짐
+	OnHealthChange(Health, StackCount);
+	if (Health <= 0)
+	{
+		//죽음
+	}
+}
+
+void APortforlioCharacter::HealthValues(float& Health, float& MaxHealth)
+{
+	if (IsValid(AttributeSetVar))
+	{
+		Health = AttributeSetVar->GetHealth();
+		MaxHealth = 1000.f; //임시, 나중에 추가해야함
+	}
+}
+
+float APortforlioCharacter::GetHealth() const
+{
+	return AttributeSetVar->GetHealth();
+}
+
+float APortforlioCharacter::GetMaxHealth() const
+{
+	return 1000.f;//임시, 나중에 추가해야함
 }
 
 void APortforlioCharacter::Move(const FInputActionValue& Value)

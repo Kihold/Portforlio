@@ -27,6 +27,9 @@ class PORTFORLIO_API UMyAttributeSet : public UAttributeSet
 public:
 	UMyAttributeSet();
 
+	UFUNCTION()
+	virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
+
 	//Health 값이 변경 될때 ReplicatedUsing 속성에 넣어준 함수 실행
 	UPROPERTY(BlueprintReadOnly, Category = "Attribute", ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
@@ -35,10 +38,10 @@ public:
 	//현재 채력 변경시 호출할 함수 델리게이트
 	FAttributeChangeDelegate HealthChangeDelegate;
 
-	//델리게이트랑 세트, 이거 있어야 호출 가능
+	//델리게이트랑 세트, 이거 있어야 값 변경시 호출 가능
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OldLifetimeProps) const override;
+	void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
 
-	UFUNCTION()
-	virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
+	
 	
 };
