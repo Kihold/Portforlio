@@ -60,15 +60,19 @@ public://내꺼 선언
 	
 	//캐릭터 관련 정보(HP, MP, Damage등 보관)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GASGamePlayAbility")
-	const class UAttributeSet* AttributeSetVar;
+	const class UMyAttributeSet* AttributeSetVar;
 
 	//EditDefaultOnly 에디터에서 초기에 캐릭터의 스킬 추가
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GASGamePlayAbility")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GASGamePlayAbility")
 	TArray<TSubclassOf<class UGameplayAbility>> InitialAbilities;
 
 	//스킬 관련 게임 어빌리티, 초기 능력치 세팅
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GASGamePlayAbility")
 	TArray<TSubclassOf<class UGameplayEffect>> DefaultAttributes;
+
+	//플레이어가 해당 캐릭터 조종권한 얻었을때 컨트롤러
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override; //캐릭터 상태가 변경됬을때 호출됨
 
 public: //스킬 관련 함수
 

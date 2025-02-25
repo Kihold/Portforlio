@@ -76,7 +76,7 @@ void APortforlioCharacter::BeginPlay()
 		if (AttributeSetVar != nullptr)
 		{
 			//델리게이트로 HP 변경시 원하는 함수 호출 가능하도록
-			const_cast<UMyAttributeSet*>(AttributeSetVar)->HealthChangeDelegate.AddDynamic(this, &APortforlioCharacter::OnHealthChangeNative);
+			const_cast<UMyAttributeSet*>(AttributeSetVar)->HealthChangeDelegate.AddDynamic(this, &APortforlioCharacter::OnHealthChagneNative);
 		}
 		else
 		{
@@ -126,6 +126,27 @@ void APortforlioCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 UMyAbilitySystemComponent* APortforlioCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void APortforlioCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	{
+		//어빌리티 시스템에서 해당 시스템을 사용하는 액터를 불러올수있도록 전달.
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+		InitalizeAbilityMulti(InitialAbilities, 1); //에디터에서 설정한 스킬, 전부 레벨 1로
+	}
+}
+
+void APortforlioCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	//서버에서도 알맞는 액터를 쓸거면 여기서도 해야됨
+	if (IsValid(AbilitySystemComponent))
+	{
+		//어빌리티 시스템에서 해당 시스템을 사용하는 액터를 불러올수 있도록 전달.
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	}
 }
 
 void APortforlioCharacter::InitalizeAbility(TSubclassOf<class UGameplayAbility> AbilityToGet, int32 AbilityLevel)
@@ -197,7 +218,7 @@ void APortforlioCharacter::ChangeAbilityLevelWithTags(FGameplayTagContainer TagC
 void APortforlioCharacter::OnHealthChagneNative(float Health, int32 StackCount)
 {
 	//BluePrintImplementEvnet함수라 여기서 부르면 블루프린트에서 불러짐
-	OnHealthChange(Health, StackCount);
+	OnHealthChagne(Health, StackCount);
 	if (Health <= 0)
 	{
 		//죽음
@@ -215,7 +236,10 @@ void APortforlioCharacter::HealthValues(float& Health, float& MaxHealth)
 
 float APortforlioCharacter::GetHealth() const
 {
-	return AttributeSetVar->GetHealth();
+	if (IsValid(AttributeSetVar))
+		return AttributeSetVar->GetHealth();
+	else
+		return 0.f;
 }
 
 float APortforlioCharacter::GetMaxHealth() const
